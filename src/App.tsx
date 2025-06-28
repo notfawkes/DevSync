@@ -47,10 +47,7 @@ export function App() {
     <Router>
       <div className="w-full min-h-screen bg-gray-900 text-white">
         <Routes>
-          <Route 
-            path="/" 
-            element={isAuthenticated ? <Navigate to="/dashboard" /> : <SignIn />} 
-          />
+          <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <SignIn />} />
           <Route 
             path="/dashboard/*" 
             element={isAuthenticated ? <Dashboard onSignOut={handleSignOut} /> : <Navigate to="/" />} 

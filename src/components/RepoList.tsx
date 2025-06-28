@@ -1,11 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchIcon, PlusIcon, UsersIcon } from 'lucide-react';
-import { supabase } from '../supabaseClient';
-
-interface RepoListProps {
-  onSelectRepo: (repoId: string) => void;
-}
 
 interface GitHubRepo {
   id: number;
@@ -19,49 +14,16 @@ interface GitHubRepo {
   private: boolean;
 }
 
-const fetchAllRepos = async (accessToken: string): Promise<GitHubRepo[]> => {
-  let allRepos: GitHubRepo[] = [];
-  let page = 1;
-  let hasMore = true;
-  while (hasMore) {
-    const res = await fetch(`https://api.github.com/user/repos?per_page=100&page=${page}`, {
-      headers: { Authorization: `token ${accessToken}` }
-    });
-    if (!res.ok) throw new Error('Failed to fetch repositories from GitHub.');
-    const data = await res.json();
-    allRepos = allRepos.concat(data);
-    hasMore = data.length === 100;
-    page++;
-  }
-  return allRepos;
-};
+interface RepoListProps {
+  onSelectRepo: (repoId: string) => void;
+  repos: GitHubRepo[];
+  loading: boolean;
+  error: string | null;
+}
 
-const RepoList: React.FC<RepoListProps> = ({ onSelectRepo }) => {
+const RepoList: React.FC<RepoListProps> = ({ onSelectRepo, repos, loading, error }) => {
   const navigate = useNavigate();
-  const [repos, setRepos] = useState<GitHubRepo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-
-  useEffect(() => {
-    const fetchRepos = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const accessToken = session?.provider_token;
-        if (!accessToken) throw new Error('No GitHub access token found.');
-        const allRepos = await fetchAllRepos(accessToken);
-        setRepos(allRepos);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load repositories.');
-        setRepos([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRepos();
-  }, []);
+  const [search, setSearch] = React.useState('');
 
   const handleRepoClick = (repoId: string) => {
     onSelectRepo(repoId);
