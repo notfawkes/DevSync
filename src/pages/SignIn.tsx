@@ -1,11 +1,30 @@
 import React from 'react';
 import { GithubIcon, MessageSquareIcon, GitBranchIcon, UsersIcon, CodeIcon } from 'lucide-react';
-interface SignInProps {
-  onSignIn: () => void;
-}
-const SignIn: React.FC<SignInProps> = ({
-  onSignIn
-}) => {
+import { supabase } from '../supabaseClient';
+
+const SignIn: React.FC = () => {
+  const [error, setError] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const handleGitHubSignIn = async () => {
+    setError(null);
+    setIsLoading(true);
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: { 
+        redirectTo: window.location.origin + '/dashboard',
+        scopes: 'read:user user:email'
+      }
+    });
+    
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+    }
+    // Supabase will redirect automatically on success
+  };
+
   return <div className="min-h-screen bg-gray-950">
       {/* Header */}
       <header className="bg-gray-900 border-b border-gray-800">
@@ -41,10 +60,15 @@ const SignIn: React.FC<SignInProps> = ({
               DevCollab enhances GitHub with real-time chat and collaboration
               tools, making team development smoother and more efficient.
             </p>
-            <button onClick={onSignIn} className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-md font-medium flex items-center justify-center space-x-2 w-full sm:w-auto transition-colors">
+            <button 
+              onClick={handleGitHubSignIn} 
+              disabled={isLoading}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white px-8 py-3 rounded-md font-medium flex items-center justify-center space-x-2 w-full sm:w-auto transition-colors"
+            >
               <GithubIcon size={20} />
-              <span>Sign in with GitHub</span>
+              <span>{isLoading ? 'Authorizing...' : 'Authorize with GitHub'}</span>
             </button>
+            {error && <p className="text-red-500 mt-4">{error}</p>}
           </div>
           {/* Right Column */}
           <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
@@ -178,11 +202,13 @@ const SignIn: React.FC<SignInProps> = ({
       </footer>
     </div>;
 };
+
 interface FeatureProps {
   icon: React.ReactNode;
   title: string;
   description: string;
 }
+
 const Feature: React.FC<FeatureProps> = ({
   icon,
   title,
@@ -196,4 +222,5 @@ const Feature: React.FC<FeatureProps> = ({
       </div>
     </div>;
 };
+
 export default SignIn;
